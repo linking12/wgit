@@ -9,7 +9,7 @@ import com.pajk.wgit.core.op.CloneOperation;
 
 public class GitService {
 
-	private String gitPraentPath;
+	private String gitPraentPath = "/Users/apple/Desktop/git";
 
 	public void cloneBranch(String remoteUrl) {
 		URIish uri;

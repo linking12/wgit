@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jgit.api.CheckoutResult;
+import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Constants;
@@ -24,6 +25,8 @@ import com.pajk.wgit.core.op.CreateLocalBranchOperation;
 import com.pajk.wgit.core.op.CreateLocalBranchOperation.UpstreamConfig;
 import com.pajk.wgit.core.op.FetchOperation;
 import com.pajk.wgit.core.op.IWGitOperation.PostExecuteTask;
+import com.pajk.wgit.core.op.IWGitOperation.PreExecuteTask;
+import com.pajk.wgit.core.op.MergeOperation;
 import com.pajk.wgit.core.op.PushOperation;
 
 public class GitService {
@@ -98,7 +101,6 @@ public class GitService {
 
 	public Map<String, Object> createBranch(final String remoteUrl,
 			final String branchName, final String sourceBranch) {
-
 		String projectPaht = getGirdir(remoteUrl) + Constants.DOT_GIT;
 		final Map<String, Object> result = new HashMap<String, Object>();
 		try {
@@ -133,5 +135,34 @@ public class GitService {
 			throw new RuntimeException(e);
 		}
 		return result;
+	}
+
+	public MergeResult mergeBranch(final String remoteUrl,
+			final String sourceBranch, final String targetBranch) {
+		String projectPaht = getGirdir(remoteUrl) + Constants.DOT_GIT;
+		MergeOperation mergeOperation;
+		try {
+			Repository repository = new FileRepository(projectPaht);
+			String source = Constants.R_HEADS + sourceBranch;
+			mergeOperation = new MergeOperation(repository, source);
+
+			mergeOperation.addPreExecuteTask(new PreExecuteTask() {
+				public void preExecute(Repository repository)
+						throws RuntimeException {
+					fetchBranch(remoteUrl, sourceBranch);
+				}
+			});
+
+			mergeOperation.addPreExecuteTask(new PreExecuteTask() {
+				public void preExecute(Repository repository)
+						throws RuntimeException {
+					fetchBranch(remoteUrl, targetBranch);
+				}
+			});
+			mergeOperation.execute();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return mergeOperation.getResult();
 	}
 }

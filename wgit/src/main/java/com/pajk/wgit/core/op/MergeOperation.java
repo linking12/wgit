@@ -115,6 +115,11 @@ public class MergeOperation extends BaseOperation {
 			throw new RuntimeException(refName
 					+ CoreText.OperationAlreadyExecuted);
 		Git git = new Git(repository);
+		synchronized (this) {
+			if (preTasks != null)
+				for (PreExecuteTask task : preTasks)
+					task.preExecute(repository);
+		}
 		MergeCommand merge = git.merge();
 		try {
 			Ref ref = repository.getRef(refName);

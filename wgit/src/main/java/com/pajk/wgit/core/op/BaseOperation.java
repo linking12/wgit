@@ -5,7 +5,7 @@ import java.util.Collection;
 
 import org.eclipse.jgit.lib.Repository;
 
-abstract class BaseOperation implements IWGitOperation{
+abstract class BaseOperation implements IWGitOperation {
 	protected final Repository repository;
 
 	protected Collection<PreExecuteTask> preTasks;
@@ -18,7 +18,7 @@ abstract class BaseOperation implements IWGitOperation{
 
 	/**
 	 * Invoke all pre-execute tasks
-	 *
+	 * 
 	 * @param monitor
 	 * @throws CoreException
 	 */
@@ -32,7 +32,7 @@ abstract class BaseOperation implements IWGitOperation{
 
 	/**
 	 * Invoke all post-execute tasks
-	 *
+	 * 
 	 * @param monitor
 	 * @throws CoreException
 	 */
@@ -48,7 +48,7 @@ abstract class BaseOperation implements IWGitOperation{
 	 * @param task
 	 *            to be performed before execution
 	 */
-	public synchronized void addPreExecuteTask(final PreExecuteTask task) {
+	public synchronized void addPreExecuteTask(PreExecuteTask task) {
 		if (preTasks == null)
 			preTasks = new ArrayList<PreExecuteTask>();
 		preTasks.add(task);

@@ -11,18 +11,15 @@
 package com.pajk.wgit.core.op;
 
 import java.io.OutputStream;
-import java.net.URISyntaxException;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.PushResult;
-import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.RemoteRefUpdate.Status;
 import org.eclipse.jgit.transport.URIish;
-import org.eclipse.osgi.util.NLS;
 
 import com.pajk.wgit.core.internal.CoreText;
 
@@ -44,6 +41,25 @@ public class PushOperation extends BaseOperation {
 	private PushOperationResult operationResult;
 
 	private CredentialsProvider credentialsProvider;
+
+	/**
+	 * Create push operation for provided specification.
+	 * 
+	 * @param localDb
+	 *            local repository.
+	 * @param specification
+	 *            specification of ref updates for remote repositories.
+	 * @param dryRun
+	 *            true if push operation should just check for possible result
+	 *            and not really update remote refs, false otherwise - when push
+	 *            should act normally.
+	 * @param timeout
+	 *            the timeout in seconds (0 for no timeout)
+	 */
+	public PushOperation(final Repository localDb, final boolean dryRun,
+			int timeout) {
+		this(localDb, null, null, dryRun, timeout);
+	}
 
 	/**
 	 * Create push operation for provided specification.
@@ -119,37 +135,6 @@ public class PushOperation extends BaseOperation {
 		return specification;
 	}
 
-	private void handleException(final URIish uri, Exception e,
-			String userMessage) {
-		String uriString;
-		if (uri != null) {
-			operationResult.addOperationResult(uri, userMessage);
-			uriString = uri.toString();
-		} else
-			uriString = "retrieving URI failed"; //$NON-NLS-1$
-
-		String userMessageForUri = NLS.bind(
-				CoreText.PushOperation_ExceptionOccurredDuringPushOnUriMessage,
-				uriString, userMessage);
-		throw new RuntimeException(userMessageForUri);
-	}
-
-	private URIish getPushURIForErrorHandling() {
-		RemoteConfig rc = null;
-		try {
-			rc = new RemoteConfig(repository.getConfig(), remoteName);
-			return rc.getPushURIs().isEmpty() ? rc.getURIs().get(0) : rc
-					.getPushURIs().get(0);
-		} catch (URISyntaxException e) {
-			// should not happen
-			/**
-			 * @TODO
-			 */
-			//Activator.logError("Reading RemoteConfig failed", e); //$NON-NLS-1$
-			return null;
-		}
-	}
-
 	/**
 	 * Sets the output stream this operation will write sideband messages to.
 	 * 
@@ -177,24 +162,25 @@ public class PushOperation extends BaseOperation {
 		operationResult = new PushOperationResult();
 		Git git = new Git(repository);
 		try {
-			Iterable<PushResult> results = git.push().setRemote(remoteName)
-					.setDryRun(dryRun).setTimeout(timeout)
-					.setCredentialsProvider(credentialsProvider)
-					.setOutputStream(out).call();
+			Iterable<PushResult> results = null;
+			if (remoteName != null) {
+				results = git.push().setRemote(remoteName).setDryRun(dryRun)
+						.setTimeout(timeout)
+						.setCredentialsProvider(credentialsProvider)
+						.setOutputStream(out).call();
+			} else {
+				results = git.push().setPushAll().setDryRun(dryRun)
+						.setTimeout(timeout)
+						.setCredentialsProvider(credentialsProvider)
+						.setOutputStream(out).call();
+			}
 			for (PushResult result : results) {
 				operationResult.addOperationResult(result.getURI(), result);
 			}
 		} catch (JGitInternalException e) {
-			String errorMessage = e.getCause() != null ? e.getCause()
-					.getMessage() : e.getMessage();
-			String userMessage = NLS.bind(
-					CoreText.PushOperation_InternalExceptionOccurredMessage,
-					errorMessage);
-			URIish uri = getPushURIForErrorHandling();
-			handleException(uri, e, userMessage);
+			throw new RuntimeException(e);
 		} catch (Exception e) {
-			URIish uri = getPushURIForErrorHandling();
-			handleException(uri, e, e.getMessage());
+			throw new RuntimeException(e);
 		}
 
 	}

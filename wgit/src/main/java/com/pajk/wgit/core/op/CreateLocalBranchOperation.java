@@ -59,6 +59,11 @@ public class CreateLocalBranchOperation extends BaseOperation {
 
 		Git git = new Git(repository);
 		try {
+			synchronized (this) {
+				if (preTasks != null)
+					for (PreExecuteTask task : preTasks)
+						task.preExecute(repository);
+			}
 			if (ref != null) {
 				SetupUpstreamMode mode;
 				if (upstreamConfig == UpstreamConfig.NONE)
@@ -70,6 +75,11 @@ public class CreateLocalBranchOperation extends BaseOperation {
 			} else
 				git.branchCreate().setName(name).setStartPoint(commit)
 						.setUpstreamMode(SetupUpstreamMode.NOTRACK).call();
+			synchronized (this) {
+				if (postTasks != null)
+					for (PostExecuteTask task : postTasks)
+						task.postExecute(repository);
+			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

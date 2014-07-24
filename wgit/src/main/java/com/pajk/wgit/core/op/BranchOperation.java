@@ -55,8 +55,10 @@ public class BranchOperation extends BaseOperation {
 
 	public void execute() throws RuntimeException {
 		CheckoutCommand co = new Git(repository).checkout();
+		co.setForce(true);
+		co.setCreateBranch(true);
 		co.setName(target);
-
+		co.setStartPoint("origin/" + target);
 		try {
 			co.call();
 		} catch (CheckoutConflictException e) {

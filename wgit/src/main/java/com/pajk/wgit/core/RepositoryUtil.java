@@ -460,10 +460,12 @@ public class RepositoryUtil {
 	 * @return the commit or null if HEAD does not exist or could not be parsed.
 	 * @since 2.2
 	 */
-	public RevCommit parseHeadCommit(Repository repository) {
+	public static RevCommit parseBranchCommit(Repository repository,
+			String branchName) {
 		RevWalk walk = null;
 		try {
-			Ref head = repository.getRef(Constants.HEAD);
+			Ref head = repository.getRef(branchName == null ? Constants.HEAD
+					: branchName);
 			if (head == null || head.getObjectId() == null)
 				return null;
 

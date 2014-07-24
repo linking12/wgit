@@ -14,11 +14,13 @@ import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.RefSpec;
 import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 
+import com.pajk.wgit.core.RepositoryUtil;
 import com.pajk.wgit.core.op.BranchOperation;
 import com.pajk.wgit.core.op.CloneOperation;
 import com.pajk.wgit.core.op.CreateLocalBranchOperation;
@@ -143,6 +145,12 @@ public class GitService {
 		MergeOperation mergeOperation;
 		try {
 			Repository repository = new FileRepository(projectPaht);
+			Ref sourceref = repository.getRef(sourceBranch);
+			Ref targetref = repository.getRef(sourceBranch);
+			if (sourceref == null || targetref == null)
+				throw new IllegalArgumentException(
+						sourceref == null ? sourceBranch : targetBranch
+								+ " has not checkout");
 			String source = Constants.R_HEADS + sourceBranch;
 			mergeOperation = new MergeOperation(repository, source);
 
@@ -164,5 +172,20 @@ public class GitService {
 			throw new RuntimeException(e);
 		}
 		return mergeOperation.getResult();
+	}
+
+	public RevCommit getRevCommit(String remoteUrl, String branchName) {
+		String projectPaht = getGirdir(remoteUrl) + Constants.DOT_GIT;
+		RevCommit commit;
+		try {
+			Repository repository = new FileRepository(projectPaht);
+			Ref branch = repository.getRef(branchName);
+			if (branch == null)
+				swtichBranch(remoteUrl, branchName);
+			commit = RepositoryUtil.parseBranchCommit(repository, branchName);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		return commit;
 	}
 }

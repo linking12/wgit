@@ -21,6 +21,7 @@ import org.eclipse.jgit.transport.RemoteConfig;
 import org.eclipse.jgit.transport.URIish;
 
 import com.pajk.wgit.core.RepositoryUtil;
+import com.pajk.wgit.core.internal.Utils;
 import com.pajk.wgit.core.op.BranchOperation;
 import com.pajk.wgit.core.op.CloneOperation;
 import com.pajk.wgit.core.op.CreateLocalBranchOperation;
@@ -33,7 +34,16 @@ import com.pajk.wgit.core.op.PushOperation;
 
 public class GitService {
 
-	private String gitPraentPath = "D:/share/";
+	private static final String gitPraentPath = Utils
+			.getPropertiesByClasspath().getProperty("gitPraentPath");
+
+	private static class Holder {
+		private static GitService instance = new GitService();
+	}
+
+	public static synchronized GitService getInstance() {
+		return Holder.instance;
+	}
 
 	// https://github.com/eclipse/egit.git
 	private String getGirdir(String remoteUrl) {

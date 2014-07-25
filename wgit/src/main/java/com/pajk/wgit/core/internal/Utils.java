@@ -8,11 +8,15 @@
  *******************************************************************************/
 package com.pajk.wgit.core.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import org.eclipse.jgit.lib.ObjectId;
 
 /**
  * Utility class
- *
+ * 
  */
 public class Utils {
 
@@ -29,8 +33,9 @@ public class Utils {
 	}
 
 	/**
-	 * The method replaces all platform specific line endings
-	 * with  <code>\n</code>
+	 * The method replaces all platform specific line endings with
+	 * <code>\n</code>
+	 * 
 	 * @param s
 	 * @return String with normalized line endings
 	 */
@@ -75,5 +80,18 @@ public class Utils {
 		if (text.length() > maxLength)
 			return text.substring(0, maxLength - 1) + "\u2026"; // ellipsis "???" (in UTF-8) //$NON-NLS-1$
 		return text;
+	}
+
+	public static final String DEFAULT_APPLICATION_FILE_PATH = "resource.properties";
+
+	public static Properties getPropertiesByClasspath() {
+		InputStream systemResourceAsStream = ClassLoader
+				.getSystemResourceAsStream(DEFAULT_APPLICATION_FILE_PATH);
+		Properties properties = new Properties();
+		try {
+			properties.load(systemResourceAsStream);
+		} catch (IOException e) {
+		}
+		return properties;
 	}
 }

@@ -44,7 +44,7 @@ public class WgitServlet extends HttpServlet {
 			Result result = GitService.getInstance().doCommand(content);
 			response(response, result);
 		} catch (Throwable th) {
-			logger.error(th.getMessage(), th);
+			logger.debug(th.getMessage(), th);
 			Result result = new Result();
 			result.setResultCode("001");
 			result.setMessage(th.getMessage());

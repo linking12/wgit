@@ -82,7 +82,7 @@ public class Utils {
 		return text;
 	}
 
-	public static final String DEFAULT_APPLICATION_FILE_PATH = "resource.properties";
+	public static final String DEFAULT_APPLICATION_FILE_PATH = "/META-INF/resource.properties";
 
 	public static Properties getPropertiesByClasspath() {
 		InputStream systemResourceAsStream = ClassLoader

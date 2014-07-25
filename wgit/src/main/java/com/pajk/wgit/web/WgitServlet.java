@@ -8,11 +8,16 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.pajk.wgit.core.service.Content;
 import com.pajk.wgit.core.service.GitService;
 import com.pajk.wgit.core.service.Result;
 
 public class WgitServlet extends HttpServlet {
+
+	private static Logger logger = LoggerFactory.getLogger(WgitServlet.class);
 
 	private static final long serialVersionUID = -7580238338264068216L;
 
@@ -39,9 +44,10 @@ public class WgitServlet extends HttpServlet {
 			Result result = GitService.getInstance().doCommand(content);
 			response(response, result);
 		} catch (Throwable th) {
+			logger.error(th.getMessage(), th);
 			Result result = new Result();
 			result.setResultCode("001");
-			result.setMessage(th.getCause().toString());
+			result.setMessage(th.getMessage());
 			response(response, result);
 		}
 	}

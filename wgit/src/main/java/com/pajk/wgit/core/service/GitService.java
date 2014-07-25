@@ -126,7 +126,6 @@ public class GitService {
 					repository, branchName, repository.getRef(sourceBranch),
 					UpstreamConfig.NONE);
 			createBranch.addPreExecuteTask(new PreExecuteTask() {
-				@Override
 				public void preExecute(Repository repository)
 						throws RuntimeException {
 					Ref sourceref = null;

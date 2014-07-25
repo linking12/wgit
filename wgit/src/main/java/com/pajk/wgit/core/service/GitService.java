@@ -168,7 +168,7 @@ public class GitService {
 		try {
 			Repository repository = new FileRepository(projectPaht);
 			Ref sourceref = repository.getRef(sourceBranch);
-			Ref targetref = repository.getRef(sourceBranch);
+			Ref targetref = repository.getRef(targetBranch);
 			if (sourceref == null || targetref == null)
 				throw new IllegalArgumentException(
 						sourceref == null ? sourceBranch : targetBranch
@@ -225,9 +225,9 @@ public class GitService {
 		}
 		case "fetch": {
 			String branchName = content.get("branch");
-			FetchResult fetchreuslt = fetchBranch(remoteUrl, branchName);
+			fetchBranch(remoteUrl, branchName);
 			result.setResultCode("000");
-			result.setMessage(fetchreuslt.getMessages());
+			result.setMessage("success");
 			break;
 		}
 		case "swtich": {
@@ -288,7 +288,7 @@ public class GitService {
 			}
 			break;
 		}
-		case "getcommt": {
+		case "getcommit": {
 			String branchName = content.get("branch");
 			RevCommit commit = getRevCommit(remoteUrl, branchName);
 			result.setResultCode("000");
@@ -297,7 +297,7 @@ public class GitService {
 
 		}
 
-		return null;
+		return result;
 	}
 
 	private String getcheckoutMessage(CheckoutResult checkoutResult) {

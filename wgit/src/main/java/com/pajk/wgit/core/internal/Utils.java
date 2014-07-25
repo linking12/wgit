@@ -85,8 +85,8 @@ public class Utils {
 	public static final String DEFAULT_APPLICATION_FILE_PATH = "/META-INF/resource.properties";
 
 	public static Properties getPropertiesByClasspath() {
-		InputStream systemResourceAsStream = ClassLoader
-				.getSystemResourceAsStream(DEFAULT_APPLICATION_FILE_PATH);
+		InputStream systemResourceAsStream = Utils.class
+				.getResourceAsStream(DEFAULT_APPLICATION_FILE_PATH);
 		Properties properties = new Properties();
 		try {
 			properties.load(systemResourceAsStream);

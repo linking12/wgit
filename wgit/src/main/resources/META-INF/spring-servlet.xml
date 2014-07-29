@@ -15,7 +15,6 @@
 		class="org.springframework.web.servlet.view.xml.MarshallingView">
 		<property name="marshaller">
 			<bean class="org.springframework.oxm.xstream.XStreamMarshaller">
-				<!-- 为了初始化XStreamMarshaller，这个类会把我们接口中得到结果以XML文档形式展现出来 -->
 				<property name="autodetectAnnotations" value="true" />
 			</bean>
 		</property>

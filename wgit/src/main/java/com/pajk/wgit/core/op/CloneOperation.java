@@ -1,19 +1,8 @@
-/*******************************************************************************
- * Copyright (C) 2007, Dave Watson <dwatson@mimvista.com>
- * Copyright (C) 2008, Robin Rosenberg <robin.rosenberg@dewire.com>
- * Copyright (C) 2008, Roger C. Soares <rogersoares@intelinet.com.br>
- * Copyright (C) 2008, Shawn O. Pearce <spearce@spearce.org>
- * Copyright (C) 2008, Marek Zawirski <marek.zawirski@gmail.com>
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
 package com.pajk.wgit.core.op;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,13 +15,19 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.osgi.util.NLS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.pajk.wgit.core.CoreException;
 import com.pajk.wgit.core.internal.CoreText;
+import com.pajk.wgit.core.internal.Utils;
 
-/**
- * Clones a repository from a remote location to a local location.
- */
 public class CloneOperation implements IWGitOperation {
+
+	private static Logger logger = LoggerFactory
+			.getLogger(CloneOperation.class);
+
 	private final URIish uri;
 
 	private final boolean allSelected;
@@ -55,30 +50,17 @@ public class CloneOperation implements IWGitOperation {
 
 	private List<PostExecuteTask> postCloneTasks;
 
-	/**
-	 * Create a new clone operation.
-	 * 
-	 * @param uri
-	 *            remote we should fetch from.
-	 * @param allSelected
-	 *            true when all branches have to be fetched (indicates wildcard
-	 *            in created fetch refspec), false otherwise.
-	 * @param selectedBranches
-	 *            collection of branches to fetch. Ignored when allSelected is
-	 *            true.
-	 * @param workdir
-	 *            working directory to clone to. The directory may or may not
-	 *            already exist.
-	 * @param refName
-	 *            name of ref (usually tag or branch) to be checked out after
-	 *            clone, e.g. full <code>refs/heads/master</code> or short
-	 *            <code>v3.1.0</code>, or null for no checkout
-	 * @param remoteName
-	 *            name of created remote config as source remote (typically
-	 *            named "origin").
-	 * @param timeout
-	 *            timeout in seconds
-	 */
+	private static final String gitPraentPath = Utils
+			.getPropertiesByClasspath().getProperty("gitPraentPath");
+
+	private String getGirdir(String remoteUrl) {
+		String[] strs = remoteUrl.split("/");
+		String projectNames = strs[strs.length - 1];
+		String projectPath = gitPraentPath
+				+ projectNames.substring(0, projectNames.indexOf(".")) + "/";
+		return projectPath;
+	}
+
 	public CloneOperation(final URIish uri, final boolean allSelected,
 			final Collection<Ref> selectedBranches, final File workdir,
 			final String refName, final String remoteName, int timeout) {
@@ -90,6 +72,19 @@ public class CloneOperation implements IWGitOperation {
 		this.refName = refName;
 		this.remoteName = remoteName;
 		this.timeout = timeout;
+	}
+
+	public CloneOperation(final String remoteUrl, final String branchName)
+			throws URISyntaxException {
+		String projectPath = getGirdir(remoteUrl) + Constants.DOT_GIT;
+		this.uri = new URIish(remoteUrl);
+		this.allSelected = true;
+		this.selectedBranches = null;
+		this.workdir = new File(projectPath);
+		this.gitdir = new File(workdir, Constants.DOT_GIT);
+		this.refName = "refs/heads/" + branchName;
+		this.remoteName = "origin";
+		this.timeout = 0;
 	}
 
 	/**
@@ -126,7 +121,7 @@ public class CloneOperation implements IWGitOperation {
 		postCloneTasks.add(task);
 	}
 
-	public void execute() throws RuntimeException {
+	public void execute() throws CoreException {
 		Repository repository = null;
 		try {
 			CloneCommand cloneRepository = Git.cloneRepository();
@@ -155,18 +150,33 @@ public class CloneOperation implements IWGitOperation {
 						task.postExecute(git.getRepository());
 			}
 		} catch (final Exception e) {
+			String message = NLS.bind(CoreText.CloneOperation_failed,
+					e.getMessage());
+			logger.debug(message, e);
 			try {
 				if (repository != null)
 					repository.close();
 				FileUtils.delete(workdir, FileUtils.RECURSIVE);
 			} catch (IOException ioe) {
-				throw new RuntimeException(
-						CoreText.CloneOperation_failed_cleanup, e);
+				throw new CoreException(CoreText.CloneOperation_failed_cleanup,
+						e);
 			}
 		} finally {
 			if (repository != null)
 				repository.close();
 		}
 
+	}
+
+	@Override
+	public Result run() {
+		Result result = new Result();
+		try {
+			this.execute();
+		} catch (RuntimeException e) {
+			result.setResultCode("001");
+			result.setMessage(e.getMessage());
+		}
+		return result;
 	}
 }

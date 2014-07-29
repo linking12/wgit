@@ -1,15 +1,6 @@
-/*******************************************************************************
- * Copyright (C) 2008, Marek Zawirski <marek.zawirski@gmail.com>
- * Copyright (C) 2011, Mathias Kinzler <mathias.kinzler@sap.com>
- * Copyright (C) 2012, Robin Stocker <robin@nibor.org>
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
 package com.pajk.wgit.core.op;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 import org.eclipse.jgit.api.Git;
@@ -20,13 +11,19 @@ import org.eclipse.jgit.transport.PushResult;
 import org.eclipse.jgit.transport.RemoteRefUpdate;
 import org.eclipse.jgit.transport.RemoteRefUpdate.Status;
 import org.eclipse.jgit.transport.URIish;
+import org.eclipse.osgi.util.NLS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.pajk.wgit.core.CoreException;
 import com.pajk.wgit.core.internal.CoreText;
 
 /**
  * Push operation: pushing from local repository to one or many remote ones.
  */
 public class PushOperation extends BaseOperation {
+
+	private static Logger logger = LoggerFactory.getLogger(PushOperation.class);
 
 	private final PushOperationSpecification specification;
 
@@ -41,6 +38,15 @@ public class PushOperation extends BaseOperation {
 	private PushOperationResult operationResult;
 
 	private CredentialsProvider credentialsProvider;
+
+	public PushOperation(String remoteUrl, final boolean dryRun, int timeout)
+			throws IOException {
+		super(remoteUrl);
+		this.dryRun = dryRun;
+		this.timeout = timeout;
+		this.specification = null;
+		this.remoteName = null;
+	}
 
 	/**
 	 * Create push operation for provided specification.
@@ -146,7 +152,7 @@ public class PushOperation extends BaseOperation {
 		this.out = out;
 	}
 
-	public void execute() throws RuntimeException {
+	public void execute() throws CoreException {
 
 		if (operationResult != null)
 			throw new IllegalStateException(CoreText.OperationAlreadyExecuted);
@@ -178,10 +184,33 @@ public class PushOperation extends BaseOperation {
 				operationResult.addOperationResult(result.getURI(), result);
 			}
 		} catch (JGitInternalException e) {
-			throw new RuntimeException(e);
+			String message = NLS.bind(CoreText.PushOperation_failed,
+					repository.toString(), e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		} catch (Exception e) {
-			throw new RuntimeException(e);
+			String message = NLS.bind(CoreText.PushOperation_failed,
+					repository.toString(), e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		}
 
+	}
+
+	@Override
+	public Result run() {
+		Result result = new Result();
+		try {
+			this.execute();
+		} catch (Exception e) {
+			result.setResultCode("001");
+			result.setMessage(e.getMessage());
+		}
+		PushOperationResult pushResult = this.getOperationResult();
+		if (!pushResult.isSuccessfulConnectionForAnyURI()) {
+			result.setResultCode("001");
+			result.setMessage(pushResult.getErrorStringForAllURis());
+		}
+		return result;
 	}
 }

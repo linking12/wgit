@@ -1,15 +1,6 @@
-/*******************************************************************************
- * Copyright (c) 2010 SAP AG.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *    Mathias Kinzler <mathias.kinzler@sap.com> - initial implementation
- *******************************************************************************/
 package com.pajk.wgit.core.op;
 
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,7 +15,11 @@ import org.eclipse.jgit.api.errors.InvalidConfigurationException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.osgi.util.NLS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.pajk.wgit.core.CoreException;
 import com.pajk.wgit.core.internal.CoreText;
 
 /**
@@ -32,11 +27,18 @@ import com.pajk.wgit.core.internal.CoreText;
  */
 public class PullOperation extends BaseOperation {
 
+	private static Logger logger = LoggerFactory.getLogger(PullOperation.class);
+
 	private final Map<Repository, Object> results = new LinkedHashMap<Repository, Object>();
 
 	private final int timeout;
 
 	private CredentialsProvider credentialsProvider;
+
+	public PullOperation(String remoteUrl, int timeout) throws IOException {
+		super(remoteUrl);
+		this.timeout = timeout;
+	}
 
 	/**
 	 * @param repositories
@@ -81,7 +83,7 @@ public class PullOperation extends BaseOperation {
 		return credentialsProvider;
 	}
 
-	public void execute() throws RuntimeException {
+	public void execute() throws CoreException {
 
 		if (!results.isEmpty())
 			throw new RuntimeException(CoreText.OperationAlreadyExecuted);
@@ -94,18 +96,46 @@ public class PullOperation extends BaseOperation {
 			pullResult = pull.call();
 			results.put(repository, pullResult);
 		} catch (DetachedHeadException e) {
-			results.put(repository, CoreText.PullOperation_DetachedHeadMessage
-					+ e.getMessage());
+			String message = NLS.bind(
+					CoreText.PullOperation_DetachedHeadMessage,
+					repository.toString(), e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		} catch (InvalidConfigurationException e) {
-			results.put(
-					repository,
-					CoreText.PullOperation_PullNotConfiguredMessage
-							+ e.getMessage());
+			String message = NLS.bind(
+					CoreText.PullOperation_PullNotConfiguredMessage,
+					repository.toString(), e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		} catch (GitAPIException e) {
-			results.put(repository, e.getMessage());
+			String message = NLS.bind(CoreText.PullOperation_Failed,
+					repository.toString(), e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		} catch (JGitInternalException e) {
-			results.put(repository, e.getMessage());
+			String message = NLS.bind(CoreText.PullOperation_Failed,
+					repository.toString(), e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		}
 
+	}
+
+	@Override
+	public Result run() {
+		Result result = new Result();
+		try {
+			this.execute();
+		} catch (Exception e) {
+			result.setResultCode("001");
+			result.setMessage(e.getMessage());
+		}
+		PullResult pullresult = (PullResult) this.getResults().get(repository);
+		boolean isSuccess = pullresult.isSuccessful();
+		if (!isSuccess) {
+			result.setResultCode("001");
+			result.setMessage(pullresult.toString());
+		}
+		return result;
 	}
 }

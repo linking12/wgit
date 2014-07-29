@@ -105,13 +105,7 @@ public class GitService {
 			final String branchName) {
 
 		String projectPaht = getGirdir(remoteUrl) + Constants.DOT_GIT;
-		Repository repository;
-		try {
-			repository = new FileRepository(projectPaht);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-		BranchOperation checkout = new BranchOperation(repository, branchName);
+		BranchOperation checkout = new BranchOperation(projectPaht, branchName);
 		checkout.execute();
 		return checkout.getResult();
 	}

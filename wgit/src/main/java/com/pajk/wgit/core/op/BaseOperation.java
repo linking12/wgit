@@ -1,16 +1,39 @@
 package com.pajk.wgit.core.op;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
 
+import com.pajk.wgit.core.internal.Utils;
+
 abstract class BaseOperation implements IWGitOperation {
+
+	private static final String gitPraentPath = Utils
+			.getPropertiesByClasspath().getProperty("gitPraentPath");
+
+	private String getGirdir(String remoteUrl) {
+		String[] strs = remoteUrl.split("/");
+		String projectNames = strs[strs.length - 1];
+		String projectPath = gitPraentPath
+				+ projectNames.substring(0, projectNames.indexOf(".")) + "/";
+		return projectPath;
+	}
+
 	protected final Repository repository;
 
 	protected Collection<PreExecuteTask> preTasks;
 
 	protected Collection<PostExecuteTask> postTasks;
+
+	BaseOperation(final String remoteUrl) throws IOException {
+		String projectPath = getGirdir(remoteUrl) + Constants.DOT_GIT;
+		this.repository = new FileRepository(projectPath);
+
+	}
 
 	BaseOperation(final Repository repository) {
 		this.repository = repository;
@@ -63,4 +86,5 @@ abstract class BaseOperation implements IWGitOperation {
 			postTasks = new ArrayList<PostExecuteTask>();
 		postTasks.add(task);
 	}
+
 }

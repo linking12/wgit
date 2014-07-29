@@ -1,19 +1,8 @@
-/*******************************************************************************
- * Copyright (C) 2007, Dave Watson <dwatson@mimvista.com>
- * Copyright (C) 2008, Robin Rosenberg <robin.rosenberg@dewire.com>
- * Copyright (C) 2006, Shawn O. Pearce <spearce@spearce.org>
- * Copyright (C) 2010, Jens Baumgart <jens.baumgart@sap.com>
- * Copyright (C) 2010, 2011, Mathias Kinzler <mathias.kinzler@sap.com>
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *******************************************************************************/
 package com.pajk.wgit.core.op;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -23,37 +12,35 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.util.FileUtils;
+import org.eclipse.osgi.util.NLS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * This class implements checkouts of a specific revision. A check is made that
- * this can be done without data loss.
- */
+import com.pajk.wgit.core.CoreException;
+import com.pajk.wgit.core.internal.CoreText;
+
 public class BranchOperation extends BaseOperation {
+
+	private static Logger logger = LoggerFactory
+			.getLogger(BranchOperation.class);
 
 	private final String target;
 
 	private CheckoutResult result;
 
-	/**
-	 * Construct a {@link BranchOperation} object for a {@link Ref}.
-	 * 
-	 * @param repository
-	 * @param target
-	 *            a {@link Ref} name or {@link RevCommit} id
-	 * @param delete
-	 *            true to delete missing projects on new branch, false to close
-	 *            them
-	 */
 	public BranchOperation(Repository repository, String target) {
 		super(repository);
 		this.target = target;
 	}
 
-	public void execute() throws RuntimeException {
+	public BranchOperation(String remoteUrl, String target) throws IOException {
+		super(remoteUrl);
+		this.target = target;
+	}
+
+	public void execute() throws CoreException {
 		CheckoutCommand co = new Git(repository).checkout();
 		co.setForce(true);
 		co.setCreateBranch(true);
@@ -64,9 +51,17 @@ public class BranchOperation extends BaseOperation {
 		} catch (CheckoutConflictException e) {
 			return;
 		} catch (JGitInternalException e) {
-			throw new RuntimeException(e);
+			String message = NLS.bind(
+					CoreText.BranchOperation_performingBranch, target,
+					e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		} catch (GitAPIException e) {
-			throw new RuntimeException(e);
+			String message = NLS.bind(
+					CoreText.BranchOperation_performingBranch, target,
+					e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		} finally {
 			BranchOperation.this.result = co.getResult();
 		}
@@ -86,7 +81,7 @@ public class BranchOperation extends BaseOperation {
 		return result;
 	}
 
-	void retryDelete(List<String> pathList) {
+	private void retryDelete(List<String> pathList) {
 		// try to delete, but for a short time only
 		long startTime = System.currentTimeMillis();
 		for (String path : pathList) {
@@ -106,4 +101,27 @@ public class BranchOperation extends BaseOperation {
 		}
 	}
 
+	@Override
+	public Result run() {
+		Result result = new Result();
+		try {
+			this.execute();
+		} catch (Exception e) {
+			result.setResultCode("001");
+			result.setMessage(e.getMessage());
+		}
+		CheckoutResult checkoutResult = this.getResult();
+		List<String> messageList = null;
+		if (checkoutResult.getStatus() == Status.CONFLICTS)
+			messageList = checkoutResult.getConflictList();
+		if (checkoutResult.getStatus() == Status.NONDELETED)
+			messageList = checkoutResult.getUndeletedList();
+		if (messageList == null) {
+			messageList = new ArrayList<String>(0);
+			messageList.addAll(checkoutResult.getModifiedList());
+			messageList.addAll(checkoutResult.getRemovedList());
+		}
+		result.setMessage(messageList.toString());
+		return result;
+	}
 }

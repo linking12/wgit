@@ -1,6 +1,6 @@
 package com.pajk.wgit.core.service;
 
-public class Result {
+public class Resul1t {
 
 	private String resultCode;
 	private String message;

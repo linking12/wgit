@@ -1,19 +1,7 @@
-/*******************************************************************************
- * Copyright (c) 2010, 2014 SAP AG and others.
- * Copyright (C) 2012, 2013 Tomasz Zarna <tzarna@gmail.com>
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *    Stefan Lay (SAP AG) - initial implementation
- *    Tomasz Zarna (IBM) - merge squash, bug 382720
- *******************************************************************************/
 package com.pajk.wgit.core.op;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
@@ -27,7 +15,12 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.merge.MergeStrategy;
+import org.eclipse.jgit.merge.ResolveMerger.MergeFailureReason;
+import org.eclipse.osgi.util.NLS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.pajk.wgit.core.CoreException;
 import com.pajk.wgit.core.internal.CoreText;
 
 /**
@@ -35,6 +28,9 @@ import com.pajk.wgit.core.internal.CoreText;
  * 
  */
 public class MergeOperation extends BaseOperation {
+
+	private static Logger logger = LoggerFactory
+			.getLogger(MergeOperation.class);
 
 	private final String refName;
 
@@ -47,6 +43,11 @@ public class MergeOperation extends BaseOperation {
 	private Boolean commit;
 
 	private MergeResult mergeResult;
+
+	public MergeOperation(String remoteUrl, String refName) throws IOException {
+		super(remoteUrl);
+		this.refName = refName;
+	}
 
 	/**
 	 * @param repository
@@ -109,7 +110,7 @@ public class MergeOperation extends BaseOperation {
 		return this.mergeResult;
 	}
 
-	public void execute() throws RuntimeException {
+	public void execute() throws CoreException {
 
 		if (mergeResult != null)
 			throw new RuntimeException(refName
@@ -128,7 +129,10 @@ public class MergeOperation extends BaseOperation {
 			else
 				merge.include(ObjectId.fromString(refName));
 		} catch (IOException e) {
-			throw new RuntimeException(CoreText.MergeOperation_InternalError, e);
+			String message = NLS.bind(CoreText.CommonOperation_InternalError,
+					e.getMessage());
+			logger.debug(message, e);
+			throw new CoreException(message, e);
 		}
 		if (fastForwardMode != null)
 			merge.setFastForward(fastForwardMode);
@@ -143,19 +147,55 @@ public class MergeOperation extends BaseOperation {
 			mergeResult = merge.call();
 			if (MergeResult.MergeStatus.NOT_SUPPORTED.equals(mergeResult
 					.getMergeStatus()))
-				throw new RuntimeException(refName + mergeResult.toString());
+				throw new CoreException(refName + mergeResult.toString());
 		} catch (NoHeadException e) {
-			throw new RuntimeException(
-					CoreText.MergeOperation_MergeFailedNoHead, e);
+			throw new CoreException(CoreText.MergeOperation_MergeFailedNoHead,
+					e);
 		} catch (ConcurrentRefUpdateException e) {
-			throw new RuntimeException(
+			throw new CoreException(
 					CoreText.MergeOperation_MergeFailedRefUpdate, e);
 		} catch (CheckoutConflictException e) {
 			mergeResult = new MergeResult(e.getConflictingPaths());
 			return;
 		} catch (GitAPIException e) {
-			throw new RuntimeException(e.getLocalizedMessage(), e.getCause());
+			throw new CoreException(e.getLocalizedMessage(), e.getCause());
 		}
 
+	}
+
+	@Override
+	public Result run() {
+		Result result = new Result();
+		try {
+			this.execute();
+		} catch (Exception e) {
+			result.setResultCode("001");
+			result.setMessage(e.getMessage());
+		}
+		result.setResultCode(mergeResult.getMergeStatus().isSuccessful() ? "000"
+				: "001");
+		Map<String, int[][]> allConflicts = mergeResult.getConflicts();
+		StringBuilder sb = new StringBuilder();
+		for (String path : allConflicts.keySet()) {
+			int[][] c = allConflicts.get(path);
+			sb.append("Path:Conflicts in file " + path + ";Result is:");
+			for (int i = 0; i < c.length; ++i) {
+				for (int j = 0; j > (c[i].length) - 1; ++j) {
+					if (c[i][j] >= 0)
+						sb.append("    Chunk for "
+								+ mergeResult.getMergedCommits()[j]
+								+ " starts on line #" + c[i][j]);
+				}
+			}
+		}
+		Map<String, MergeFailureReason> failreason = mergeResult
+				.getFailingPaths();
+		for (String path : failreason.keySet()) {
+			MergeFailureReason reason = failreason.get(path);
+			sb.append("Path:Conflicts in file " + path + ";Result is:"
+					+ reason.toString());
+		}
+		result.setMessage(sb.toString());
+		return result;
 	}
 }

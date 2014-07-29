@@ -38,6 +38,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryCache.FileKey;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevObject;
+import org.eclipse.jgit.revwalk.RevSort;
 import org.eclipse.jgit.revwalk.RevTag;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
@@ -45,6 +46,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.WorkingTreeIterator;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.util.FS;
+import org.eclipse.jgit.util.StringUtils;
 
 import com.pajk.wgit.core.internal.CoreText;
 
@@ -458,26 +460,43 @@ public class RepositoryUtil {
 	 * 
 	 * @param repository
 	 * @return the commit or null if HEAD does not exist or could not be parsed.
+	 * @throws Throwable
 	 * @since 2.2
 	 */
 	public static RevCommit parseBranchCommit(Repository repository,
-			String branchName) {
-		RevWalk walk = null;
-		try {
-			Ref head = repository.getRef(branchName == null ? Constants.HEAD
-					: branchName);
-			if (head == null || head.getObjectId() == null)
-				return null;
+			String branchName) throws Throwable {
 
-			walk = new RevWalk(repository);
-			RevCommit commit = walk.parseCommit(head.getObjectId());
-			return commit;
-		} catch (IOException e) {
+		if (!hasCommits(repository)) {
 			return null;
-		} finally {
-			if (walk != null)
-				walk.release();
 		}
+		RevCommit commit = null;
+		try {
+			ObjectId branchObject;
+			if (StringUtils.isEmptyOrNull(branchName)) {
+				branchObject = repository.resolve(Constants.HEAD);
+			} else {
+				branchObject = repository.resolve(branchName);
+			}
+
+			RevWalk walk = new RevWalk(repository);
+			walk.sort(RevSort.COMMIT_TIME_DESC);
+			RevCommit head = walk.parseCommit(branchObject);
+			walk.markStart(head);
+			commit = walk.next();
+			walk.dispose();
+		} catch (Throwable t) {
+			throw t;
+		}
+		return commit;
+	}
+
+	public static boolean hasCommits(Repository repository) {
+		if (repository != null && repository.getDirectory().exists()) {
+			return (new File(repository.getDirectory(), "objects").list().length > 2)
+					|| (new File(repository.getDirectory(), "objects/pack")
+							.list().length > 0);
+		}
+		return false;
 	}
 
 	/**

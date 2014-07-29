@@ -39,13 +39,13 @@ public class PushOperation extends BaseOperation {
 
 	private CredentialsProvider credentialsProvider;
 
-	public PushOperation(String remoteUrl, final boolean dryRun, int timeout)
-			throws IOException {
+	public PushOperation(String remoteUrl, final boolean dryRun,
+			final String remoteName, int timeout) throws IOException {
 		super(remoteUrl);
 		this.dryRun = dryRun;
 		this.timeout = timeout;
 		this.specification = null;
-		this.remoteName = null;
+		this.remoteName = remoteName;
 	}
 
 	/**
@@ -205,6 +205,7 @@ public class PushOperation extends BaseOperation {
 		} catch (Exception e) {
 			result.setResultCode("001");
 			result.setMessage(e.getMessage());
+			return result;
 		}
 		PushOperationResult pushResult = this.getOperationResult();
 		if (!pushResult.isSuccessfulConnectionForAnyURI()) {

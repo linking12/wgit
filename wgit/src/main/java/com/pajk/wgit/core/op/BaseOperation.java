@@ -10,12 +10,12 @@ import org.eclipse.jgit.lib.Repository;
 
 import com.pajk.wgit.core.internal.Utils;
 
-abstract class BaseOperation implements IWGitOperation {
+public abstract class BaseOperation implements IWGitOperation {
 
 	private static final String gitPraentPath = Utils
 			.getPropertiesByClasspath().getProperty("gitPraentPath");
 
-	private String getGirdir(String remoteUrl) {
+	public static String getGirdir(String remoteUrl) {
 		String[] strs = remoteUrl.split("/");
 		String projectNames = strs[strs.length - 1];
 		String projectPath = gitPraentPath

@@ -53,6 +53,7 @@ public interface IWGitOperation {
 
 		public Result() {
 			resultCode = "000";
+			message = "success";
 		}
 
 		public String getResultCode() {

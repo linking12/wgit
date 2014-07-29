@@ -1,5 +1,7 @@
 package com.pajk.wgit.core.op;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +18,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.osgi.util.NLS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 import com.pajk.wgit.core.CoreException;
 import com.pajk.wgit.core.internal.CoreText;
@@ -44,12 +47,12 @@ public class FetchOperation extends BaseOperation {
 
 	private TagOpt tagOpt;
 
-	public FetchOperation(Repository repository, URIish uri, int timeout,
-			boolean dryRun) {
-		super(repository);
+	public FetchOperation(String remoteUrl, int timeout, boolean dryRun)
+			throws IOException, URISyntaxException {
+		super(remoteUrl);
 		this.timeout = timeout;
 		this.dryRun = dryRun;
-		this.uri = uri;
+		this.uri = new URIish(remoteUrl);
 		List<RefSpec> specs = new ArrayList<RefSpec>();
 		specs.add(new RefSpec("+refs/heads/*:refs/remotes/origin/*"));
 		specs.add(new RefSpec("+refs/tags/*:refs/tags/*"));
@@ -164,8 +167,10 @@ public class FetchOperation extends BaseOperation {
 		} catch (Exception e) {
 			result.setResultCode("001");
 			result.setMessage(e.getMessage());
+			return result;
 		}
-		result.setMessage(getOperationResult().getMessages());
+		if (!StringUtils.isEmpty(getOperationResult().getMessages()))
+			result.setMessage(getOperationResult().getMessages());
 		return result;
 	}
 }

@@ -1,7 +1,6 @@
 package com.pajk.wgit.core.op;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 import org.eclipse.jgit.api.CreateBranchCommand.SetupUpstreamMode;
 import org.eclipse.jgit.api.Git;
@@ -11,7 +10,6 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.transport.URIish;
 import org.eclipse.osgi.util.NLS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,13 +32,13 @@ public class CreateLocalBranchOperation extends BaseOperation {
 
 	private final UpstreamConfig upstreamConfig;
 
-	private URIish remoteURI;
+	private String remoteURI;
 
-	public URIish getRemoteURI() {
+	public String getRemoteURI() {
 		return remoteURI;
 	}
 
-	public void setRemoteURI(URIish remoteURI) {
+	public void setRemoteURI(String remoteURI) {
 		this.remoteURI = remoteURI;
 	}
 
@@ -67,14 +65,11 @@ public class CreateLocalBranchOperation extends BaseOperation {
 			String name) throws IOException {
 		super(remoteUrl);
 		this.name = name;
-		this.ref = repository.getRef(name);
+		this.ref = repository.getRef(sourceName);
 		this.commit = null;
 		this.upstreamConfig = UpstreamConfig.NONE;
 		this.sourceName = sourceName;
-		try {
-			this.setRemoteURI(new URIish(remoteUrl));
-		} catch (URISyntaxException e) {
-		}
+		this.setRemoteURI(remoteUrl);
 	}
 
 	/**
@@ -210,12 +205,11 @@ public class CreateLocalBranchOperation extends BaseOperation {
 				try {
 					Ref ref = repository.getRef(sourceName);
 					if (ref != null)
-						new FetchOperation(repository, remoteURI, 60, false)
-								.execute();
+						new FetchOperation(remoteURI, 60, false).execute();
 					else
 						new BranchOperation(repository, sourceName).execute();
-				} catch (IOException e) {
-					// ignore here
+				} catch (Exception e) {
+					throw new RuntimeException(e);
 				}
 			}
 		});
@@ -231,6 +225,7 @@ public class CreateLocalBranchOperation extends BaseOperation {
 		} catch (Exception e) {
 			result.setResultCode("001");
 			result.setMessage(e.getMessage());
+			return result;
 		}
 		return result;
 	}

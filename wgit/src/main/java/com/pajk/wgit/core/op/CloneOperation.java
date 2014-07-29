@@ -173,9 +173,10 @@ public class CloneOperation implements IWGitOperation {
 		Result result = new Result();
 		try {
 			this.execute();
-		} catch (RuntimeException e) {
+		} catch (Exception e) {
 			result.setResultCode("001");
 			result.setMessage(e.getMessage());
+			return result;
 		}
 		return result;
 	}

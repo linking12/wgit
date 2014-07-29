@@ -171,29 +171,34 @@ public class MergeOperation extends BaseOperation {
 		} catch (Exception e) {
 			result.setResultCode("001");
 			result.setMessage(e.getMessage());
+			return result;
 		}
 		result.setResultCode(mergeResult.getMergeStatus().isSuccessful() ? "000"
 				: "001");
 		Map<String, int[][]> allConflicts = mergeResult.getConflicts();
 		StringBuilder sb = new StringBuilder();
-		for (String path : allConflicts.keySet()) {
-			int[][] c = allConflicts.get(path);
-			sb.append("Path:Conflicts in file " + path + ";Result is:");
-			for (int i = 0; i < c.length; ++i) {
-				for (int j = 0; j > (c[i].length) - 1; ++j) {
-					if (c[i][j] >= 0)
-						sb.append("    Chunk for "
-								+ mergeResult.getMergedCommits()[j]
-								+ " starts on line #" + c[i][j]);
+		if (allConflicts != null) {
+			for (String path : allConflicts.keySet()) {
+				int[][] c = allConflicts.get(path);
+				sb.append("Path:Conflicts in file " + path + ";Result is:");
+				for (int i = 0; i < c.length; ++i) {
+					for (int j = 0; j > (c[i].length) - 1; ++j) {
+						if (c[i][j] >= 0)
+							sb.append("    Chunk for "
+									+ mergeResult.getMergedCommits()[j]
+									+ " starts on line #" + c[i][j]);
+					}
 				}
 			}
 		}
 		Map<String, MergeFailureReason> failreason = mergeResult
 				.getFailingPaths();
-		for (String path : failreason.keySet()) {
-			MergeFailureReason reason = failreason.get(path);
-			sb.append("Path:Conflicts in file " + path + ";Result is:"
-					+ reason.toString());
+		if (failreason != null) {
+			for (String path : failreason.keySet()) {
+				MergeFailureReason reason = failreason.get(path);
+				sb.append("Path:" + path + ";Conflicts in file:"
+						+ reason.toString());
+			}
 		}
 		result.setMessage(sb.toString());
 		return result;

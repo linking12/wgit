@@ -109,6 +109,7 @@ public class BranchOperation extends BaseOperation {
 		} catch (Exception e) {
 			result.setResultCode("001");
 			result.setMessage(e.getMessage());
+			return result;
 		}
 		CheckoutResult checkoutResult = this.getResult();
 		List<String> messageList = null;

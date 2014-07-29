@@ -135,6 +135,7 @@ public class PullOperation extends BaseOperation {
 		if (!isSuccess) {
 			result.setResultCode("001");
 			result.setMessage(pullresult.toString());
+			return result;
 		}
 		return result;
 	}

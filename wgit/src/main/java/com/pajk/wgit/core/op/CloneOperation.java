@@ -76,7 +76,7 @@ public class CloneOperation implements IWGitOperation {
 
 	public CloneOperation(final String remoteUrl, final String branchName)
 			throws URISyntaxException {
-		String projectPath = getGirdir(remoteUrl) + Constants.DOT_GIT;
+		String projectPath = getGirdir(remoteUrl);
 		this.uri = new URIish(remoteUrl);
 		this.allSelected = true;
 		this.selectedBranches = null;

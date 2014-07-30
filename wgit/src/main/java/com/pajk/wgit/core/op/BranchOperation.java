@@ -12,6 +12,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.util.FileUtils;
@@ -19,6 +20,7 @@ import org.eclipse.osgi.util.NLS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pajk.wgit.core.CommitUtil;
 import com.pajk.wgit.core.CoreException;
 import com.pajk.wgit.core.internal.CoreText;
 
@@ -29,27 +31,7 @@ public class BranchOperation extends BaseOperation {
 
 	private final String target;
 
-	private boolean isSwtich = true;
-
 	private CheckoutResult result;
-
-	private String revision;
-
-	public String getRevision() {
-		return revision;
-	}
-
-	public void setRevision(String revision) {
-		this.revision = revision;
-	}
-
-	public boolean isSwtich() {
-		return isSwtich;
-	}
-
-	public void setSwtich(boolean isSwtich) {
-		this.isSwtich = isSwtich;
-	}
 
 	public BranchOperation(Repository repository, String target) {
 		super(repository);
@@ -63,21 +45,20 @@ public class BranchOperation extends BaseOperation {
 
 	public void execute() throws CoreException {
 		CheckoutCommand co = new Git(repository).checkout();
-		co.setForce(true);
-		co.setCreateBranch(true);
-		co.setName(target);
-		if (isSwtich)
-			co.setStartPoint("origin/" + target);
-		else if (!isSwtich && revision != null) {
-			try {
-				RevCommit revCommit = super.getRevCommit(revision);
+		try {
+			Ref ref = repository.getRef(target);
+			if (ref != null) {// swtich branch
+				co.setForce(true);
+				co.setCreateBranch(true);
+				co.setName(target);
+				co.setStartPoint("origin/" + target);
+			} else {
+				RevCommit revCommit = super.getRevCommit(target);
 				co.setStartPoint(revCommit);
-			} catch (Throwable e) {
-				String message = NLS.bind(CoreText.GetPrevision_failed,
-						repository.toString(), e.getMessage());
-				logger.debug(message, e);
-				throw new CoreException(message, e);
+				co.setName(CommitUtil.getBranchName(revCommit, repository));
 			}
+		} catch (Throwable e) {
+			throw new CoreException(e.getLocalizedMessage(), e);
 		}
 		try {
 			co.call();

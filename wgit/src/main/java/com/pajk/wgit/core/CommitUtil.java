@@ -40,7 +40,7 @@ public class CommitUtil {
 
 	/**
 	 * Sorts commits in parent-first order.
-	 *
+	 * 
 	 * @param commits
 	 *            the commits to sort
 	 * @return a new list containing the sorted commits
@@ -72,7 +72,7 @@ public class CommitUtil {
 	/**
 	 * Returns whether a commit is on the current branch, ie. if it is reachable
 	 * from the current HEAD.
-	 *
+	 * 
 	 * @param commit
 	 *            the commit to check
 	 * @param repository
@@ -84,13 +84,13 @@ public class CommitUtil {
 	public static boolean isCommitInCurrentBranch(RevCommit commit,
 			Repository repository) throws IOException {
 		return areCommitsInCurrentBranch(Collections.singleton(commit),
-				repository);
+				repository, null);
 	}
 
 	/**
 	 * Returns whether the commits are on the current branch, ie. if they are
 	 * reachable from the current HEAD.
-	 *
+	 * 
 	 * @param commits
 	 *            the commits to check
 	 * @param repository
@@ -100,10 +100,11 @@ public class CommitUtil {
 	 *             if there is an I/O error
 	 */
 	public static boolean areCommitsInCurrentBranch(
-			Collection<RevCommit> commits, Repository repository)
+			Collection<RevCommit> commits, Repository repository, String branch)
 			throws IOException {
 		RevWalk walk = new RevWalk(repository);
-		ObjectId headCommitId = repository.resolve(Constants.HEAD);
+		ObjectId headCommitId = repository
+				.resolve(branch == null ? Constants.HEAD : branch);
 		RevCommit headCommit = walk.parseCommit(headCommitId);
 
 		for (final RevCommit commit : commits) {
@@ -130,5 +131,31 @@ public class CommitUtil {
 				return false;
 		}
 		return true;
+	}
+
+	public static String getBranchName(RevCommit commit, Repository repository)
+			throws IOException {
+		String branchName = null;
+		List<RefModel> localBranchs = RepositoryUtil.getLocalBranches(
+				repository, false, -1);
+		List<RefModel> remoteBranchs = RepositoryUtil.getRemoteBranches(
+				repository, false, -1);
+		List<String> allBranchs = new ArrayList<String>();
+		for (RefModel ref : localBranchs) {
+			allBranchs.add(ref.toString());
+		}
+		for (RefModel ref : remoteBranchs) {
+			allBranchs.add(ref.toString());
+		}
+		List<RevCommit> tempCommit = new ArrayList<RevCommit>();
+		tempCommit.add(commit);
+		for (String branch : allBranchs) {
+			boolean isbranch = areCommitsInCurrentBranch(tempCommit,
+					repository, branch);
+			if (isbranch)
+				branchName = branch;
+		}
+
+		return branchName;
 	}
 }

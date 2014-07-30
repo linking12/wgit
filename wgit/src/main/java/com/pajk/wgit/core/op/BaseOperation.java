@@ -35,6 +35,7 @@ public abstract class BaseOperation implements IWGitOperation {
 		RevWalk walk = new RevWalk(repository);
 		ObjectId objId = repository.resolve(revision);
 		RevCommit revCommit = walk.parseCommit(objId);
+		walk.dispose();
 		return revCommit;
 	}
 

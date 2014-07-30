@@ -11,7 +11,6 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.merge.MergeStrategy;
@@ -127,7 +126,7 @@ public class MergeOperation extends BaseOperation {
 			if (ref != null)
 				merge.include(ref);
 			else
-				merge.include(ObjectId.fromString(refName));
+				merge.include(repository.resolve(refName));
 		} catch (IOException e) {
 			String message = NLS.bind(CoreText.CommonOperation_InternalError,
 					e.getMessage());

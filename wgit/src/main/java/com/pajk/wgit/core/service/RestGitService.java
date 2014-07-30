@@ -1,5 +1,7 @@
 package com.pajk.wgit.core.service;
 
+import java.io.IOException;
+
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Constants;
@@ -106,36 +108,15 @@ public class RestGitService {
 	public ModelAndView merger(
 			@RequestParam(value = "remoteUrl", required = true) final String remoteUrl,
 			@RequestParam(value = "from", required = true) final String source,
-			@RequestParam(value = "to", required = true) final String target) {
+			@RequestParam(value = "to", required = true) final String target,
+			@RequestParam(value = "flag", required = true) final boolean isBranch) {
 		Result result = null;
 		try {
-			MergeOperation merge = new MergeOperation(remoteUrl, source);
-			merge.addPreExecuteTask(new PreExecuteTask() {
-				public void preExecute(Repository repository)
-						throws RuntimeException {
-					try {
-						if (repository.getRef(source) == null)
-							new BranchOperation(remoteUrl, source).execute();
-						else
-							new FetchOperation(remoteUrl, 60, false);
-						if (repository.getRef(target) == null)
-							new BranchOperation(remoteUrl, target).execute();
-						else
-							new FetchOperation(remoteUrl, 60, false);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					} finally {
-						try {
-							if (!repository.getBranch().equals(target))
-								new BranchOperation(remoteUrl, target)
-										.execute();
-						} catch (Exception e) {
-							throw new RuntimeException(e);
-						}
-
-					}
-				}
-			});
+			MergeOperation merge = null;
+			if (isBranch)
+				merge = this.branchMergeOp(remoteUrl, source, target);
+			else
+				merge = this.versionMergeOp(remoteUrl, source, target);
 			result = merge.run();
 		} catch (Throwable e) {
 			result = new Result();
@@ -186,6 +167,54 @@ public class RestGitService {
 		ModelAndView model = new ModelAndView("jsonView");
 		model.addObject(result);
 		return model;
+	}
+
+	private MergeOperation branchMergeOp(final String remoteUrl,
+			final String source, final String target) throws IOException {
+		MergeOperation merge = new MergeOperation(remoteUrl, source);
+		merge.addPreExecuteTask(new PreExecuteTask() {
+			public void preExecute(Repository repository)
+					throws RuntimeException {
+				try {
+					if (repository.getRef(source) == null)
+						new BranchOperation(remoteUrl, source).execute();
+					else
+						new FetchOperation(remoteUrl, 60, false);
+					if (repository.getRef(target) == null)
+						new BranchOperation(remoteUrl, target).execute();
+					else
+						new FetchOperation(remoteUrl, 60, false);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				} finally {
+					try {
+						if (!repository.getBranch().equals(target))
+							new BranchOperation(remoteUrl, target).execute();
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+
+				}
+			}
+		});
+		return merge;
+	}
+
+	private MergeOperation versionMergeOp(final String remoteUrl,
+			final String source, final String target) throws IOException {
+		MergeOperation merge = new MergeOperation(remoteUrl, source);
+		merge.addPreExecuteTask(new PreExecuteTask() {
+			public void preExecute(Repository repository)
+					throws RuntimeException {
+				try {
+					new BranchOperation(remoteUrl, source).execute();
+					new BranchOperation(remoteUrl, target).execute();
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		});
+		return merge;
 	}
 
 }

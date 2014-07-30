@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -545,5 +546,48 @@ public class RepositoryUtil {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static List<RefModel> getLocalBranches(Repository repository,
+			boolean fullName, int maxCount) {
+		return getRefs(repository, Constants.R_HEADS, fullName, maxCount);
+	}
+
+	public static List<RefModel> getRemoteBranches(Repository repository,
+			boolean fullName, int maxCount) {
+		return getRefs(repository, Constants.R_REMOTES, fullName, maxCount);
+	}
+
+	private static List<RefModel> getRefs(Repository repository, String refs,
+			boolean fullName, int maxCount) {
+		List<RefModel> list = new ArrayList<RefModel>();
+		if (maxCount == 0) {
+			return list;
+		}
+		if (!hasCommits(repository)) {
+			return list;
+		}
+		try {
+			Map<String, Ref> map = repository.getRefDatabase().getRefs(refs);
+			RevWalk rw = new RevWalk(repository);
+			for (Entry<String, Ref> entry : map.entrySet()) {
+				Ref ref = entry.getValue();
+				RevObject object = rw.parseAny(ref.getObjectId());
+				String name = entry.getKey();
+				if (fullName && !StringUtils.isEmptyOrNull(refs)) {
+					name = refs + name;
+				}
+				list.add(new RefModel(name, ref, object));
+			}
+			rw.dispose();
+			Collections.sort(list);
+			Collections.reverse(list);
+			if (maxCount > 0 && list.size() > maxCount) {
+				list = new ArrayList<RefModel>(list.subList(0, maxCount));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return list;
 	}
 }

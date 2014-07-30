@@ -4,9 +4,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 
 import com.pajk.wgit.core.internal.Utils;
 
@@ -21,6 +27,15 @@ public abstract class BaseOperation implements IWGitOperation {
 		String projectPath = gitPraentPath
 				+ projectNames.substring(0, projectNames.indexOf(".")) + "/";
 		return projectPath;
+	}
+
+	public RevCommit getRevCommit(String revision)
+			throws RevisionSyntaxException, AmbiguousObjectException,
+			IncorrectObjectTypeException, IOException {
+		RevWalk walk = new RevWalk(repository);
+		ObjectId objId = repository.resolve(revision);
+		RevCommit revCommit = walk.parseCommit(objId);
+		return revCommit;
 	}
 
 	protected final Repository repository;

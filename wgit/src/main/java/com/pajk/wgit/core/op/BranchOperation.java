@@ -13,6 +13,7 @@ import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.osgi.util.NLS;
 import org.slf4j.Logger;
@@ -28,7 +29,27 @@ public class BranchOperation extends BaseOperation {
 
 	private final String target;
 
+	private boolean isSwtich = true;
+
 	private CheckoutResult result;
+
+	private String revision;
+
+	public String getRevision() {
+		return revision;
+	}
+
+	public void setRevision(String revision) {
+		this.revision = revision;
+	}
+
+	public boolean isSwtich() {
+		return isSwtich;
+	}
+
+	public void setSwtich(boolean isSwtich) {
+		this.isSwtich = isSwtich;
+	}
 
 	public BranchOperation(Repository repository, String target) {
 		super(repository);
@@ -45,7 +66,19 @@ public class BranchOperation extends BaseOperation {
 		co.setForce(true);
 		co.setCreateBranch(true);
 		co.setName(target);
-		co.setStartPoint("origin/" + target);
+		if (isSwtich)
+			co.setStartPoint("origin/" + target);
+		else if (!isSwtich && revision != null) {
+			try {
+				RevCommit revCommit = super.getRevCommit(revision);
+				co.setStartPoint(revCommit);
+			} catch (Throwable e) {
+				String message = NLS.bind(CoreText.GetPrevision_failed,
+						repository.toString(), e.getMessage());
+				logger.debug(message, e);
+				throw new CoreException(message, e);
+			}
+		}
 		try {
 			co.call();
 		} catch (CheckoutConflictException e) {

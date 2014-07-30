@@ -136,7 +136,7 @@ public class RestGitService {
 		try {
 			ResetOperation reset = new ResetOperation(remoteUrl, revision,
 					ResetType.HARD);
-			reset.run();
+			result = reset.run();
 		} catch (Throwable e) {
 			result = new Result();
 			result.setResultCode("001");
@@ -207,8 +207,10 @@ public class RestGitService {
 			public void preExecute(Repository repository)
 					throws RuntimeException {
 				try {
-					new BranchOperation(remoteUrl, source).execute();
-					new BranchOperation(remoteUrl, target).execute();
+					new ResetOperation(repository, target, ResetType.HARD)
+							.execute();
+					// new BranchOperation(remoteUrl, source).execute();
+					// new BranchOperation(remoteUrl, target).execute();
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}

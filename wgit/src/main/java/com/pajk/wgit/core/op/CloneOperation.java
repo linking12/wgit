@@ -153,10 +153,6 @@ public class CloneOperation implements IWGitOperation {
 			String message = NLS.bind(CoreText.CloneOperation_failed,
 					e.getMessage());
 			logger.debug(message, e);
-			throw new CoreException(message, e);
-		} finally {
-			if (repository != null)
-				repository.close();
 			try {
 				if (repository != null)
 					repository.close();
@@ -165,6 +161,10 @@ public class CloneOperation implements IWGitOperation {
 				throw new CoreException(CoreText.CloneOperation_failed_cleanup,
 						ioe);
 			}
+			throw new CoreException(message, e);
+		} finally {
+			if (repository != null)
+				repository.close();
 		}
 
 	}

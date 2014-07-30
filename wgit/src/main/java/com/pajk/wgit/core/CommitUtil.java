@@ -135,27 +135,16 @@ public class CommitUtil {
 
 	public static String getBranchName(RevCommit commit, Repository repository)
 			throws IOException {
-		String branchName = null;
-		List<RefModel> localBranchs = RepositoryUtil.getLocalBranches(
-				repository, false, -1);
-		List<RefModel> remoteBranchs = RepositoryUtil.getRemoteBranches(
-				repository, false, -1);
-		List<String> allBranchs = new ArrayList<String>();
-		for (RefModel ref : localBranchs) {
-			allBranchs.add(ref.toString());
-		}
-		for (RefModel ref : remoteBranchs) {
-			allBranchs.add(ref.toString());
-		}
+		List<String> allBranchs = RepositoryUtil.getAllBranchs(repository);
 		List<RevCommit> tempCommit = new ArrayList<RevCommit>();
 		tempCommit.add(commit);
 		for (String branch : allBranchs) {
 			boolean isbranch = areCommitsInCurrentBranch(tempCommit,
 					repository, branch);
 			if (isbranch)
-				branchName = branch;
+				return branch;
 		}
 
-		return branchName;
+		return null;
 	}
 }

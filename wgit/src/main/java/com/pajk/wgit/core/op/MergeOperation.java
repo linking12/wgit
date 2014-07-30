@@ -168,12 +168,13 @@ public class MergeOperation extends BaseOperation {
 		try {
 			this.execute();
 		} catch (Exception e) {
+			logger.debug("fail", e);
 			result.setResultCode("001");
 			result.setMessage(e.getMessage());
 			return result;
 		}
-		result.setResultCode(mergeResult.getMergeStatus().isSuccessful() ? "000"
-				: "001");
+		boolean success = mergeResult.getMergeStatus().isSuccessful();
+		result.setResultCode(success ? "000" : "001");
 		Map<String, int[][]> allConflicts = mergeResult.getConflicts();
 		StringBuilder sb = new StringBuilder();
 		if (allConflicts != null) {
@@ -199,7 +200,11 @@ public class MergeOperation extends BaseOperation {
 						+ reason.toString());
 			}
 		}
-		result.setMessage(sb.toString());
+		if (!success)
+			result.setMessage(sb.toString());
+		else
+			result.setMessage(mergeResult.toString());
+
 		return result;
 	}
 }

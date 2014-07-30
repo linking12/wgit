@@ -548,6 +548,20 @@ public class RepositoryUtil {
 		}
 	}
 
+	public static List<String> getAllBranchs(Repository repository) {
+		List<RefModel> localBranchs = getLocalBranches(repository, false, -1);
+		List<RefModel> remoteBranchs = getRemoteBranches(repository, false, -1);
+		List<String> allBranchs = new ArrayList<String>();
+		for (RefModel ref : localBranchs) {
+			allBranchs.add(ref.toString());
+		}
+		for (RefModel ref : remoteBranchs) {
+			String branchName = ref.toString();
+			allBranchs.add(branchName.split("/")[1]);
+		}
+		return allBranchs;
+	}
+
 	public static List<RefModel> getLocalBranches(Repository repository,
 			boolean fullName, int maxCount) {
 		return getRefs(repository, Constants.R_HEADS, fullName, maxCount);

@@ -12,7 +12,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.util.FileUtils;
@@ -22,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.pajk.wgit.core.CommitUtil;
 import com.pajk.wgit.core.CoreException;
+import com.pajk.wgit.core.RepositoryUtil;
 import com.pajk.wgit.core.internal.CoreText;
 
 public class BranchOperation extends BaseOperation {
@@ -46,8 +46,8 @@ public class BranchOperation extends BaseOperation {
 	public void execute() throws CoreException {
 		CheckoutCommand co = new Git(repository).checkout();
 		try {
-			Ref ref = repository.getRef(target);
-			if (ref != null) {// swtich branch
+			List<String> allBranchs = RepositoryUtil.getAllBranchs(repository);
+			if (allBranchs.contains(target)) {// swtich branch
 				co.setForce(true);
 				co.setCreateBranch(true);
 				co.setName(target);

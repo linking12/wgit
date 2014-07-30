@@ -1,5 +1,6 @@
 package com.pajk.wgit.core.service;
 
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
@@ -21,6 +22,7 @@ import com.pajk.wgit.core.op.IWGitOperation.PreExecuteTask;
 import com.pajk.wgit.core.op.IWGitOperation.Result;
 import com.pajk.wgit.core.op.MergeOperation;
 import com.pajk.wgit.core.op.PushOperation;
+import com.pajk.wgit.core.op.ResetOperation;
 
 @RequestMapping("/restful")
 @Controller
@@ -135,6 +137,25 @@ public class RestGitService {
 				}
 			});
 			result = merge.run();
+		} catch (Throwable e) {
+			result = new Result();
+			result.setResultCode("001");
+			result.setMessage(e.getMessage());
+		}
+		ModelAndView model = new ModelAndView("jsonView");
+		model.addObject(result);
+		return model;
+	}
+
+	@RequestMapping(value = "/roolback", method = RequestMethod.GET)
+	public ModelAndView roolback(
+			@RequestParam(value = "remoteUrl", required = true) String remoteUrl,
+			@RequestParam(value = "revision", required = true) String revision) {
+		Result result = null;
+		try {
+			ResetOperation reset = new ResetOperation(remoteUrl, revision,
+					ResetType.HARD);
+			reset.run();
 		} catch (Throwable e) {
 			result = new Result();
 			result.setResultCode("001");

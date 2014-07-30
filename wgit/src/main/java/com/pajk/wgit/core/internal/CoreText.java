@@ -42,6 +42,10 @@ public class CoreText extends NLS {
 
 	public static String OperationNotYetExecuted;
 
+	public static String GetPrevision_failed;
+
+	public static String ResetOperation_failed;
+
 	static {
 		initializeMessages(BUNDLE_NAME, CoreText.class);
 	}

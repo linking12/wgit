@@ -1,12 +1,12 @@
 package com.pajk.wgit.core.service;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.pajk.wgit.core.JacksonJsonUtil;
 import com.pajk.wgit.core.RepositoryUtil;
 import com.pajk.wgit.core.op.BaseOperation;
 import com.pajk.wgit.core.op.BranchOperation;
@@ -155,10 +156,11 @@ public class RestGitService {
 		try {
 			Repository repository = new FileRepository(
 					BaseOperation.getGirdir(remoteUrl) + Constants.DOT_GIT);
-			RevCommit commit = RepositoryUtil.parseBranchCommit(repository,
+			List<String> commit = RepositoryUtil.parseBranchCommit(repository,
 					branchName);
 			result = new Result();
-			result.setMessage(commit.getName());
+			String jsonCommit = JacksonJsonUtil.beanToJson(commit, false);
+			result.setMessage(jsonCommit);
 		} catch (Throwable e) {
 			result = new Result();
 			result.setResultCode("001");

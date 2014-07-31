@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -464,13 +465,12 @@ public class RepositoryUtil {
 	 * @throws Throwable
 	 * @since 2.2
 	 */
-	public static RevCommit parseBranchCommit(Repository repository,
+	public static List<String> parseBranchCommit(Repository repository,
 			String branchName) throws Throwable {
-
+		List<String> allcommit = new ArrayList<String>();
 		if (!hasCommits(repository)) {
 			return null;
 		}
-		RevCommit commit = null;
 		try {
 			ObjectId branchObject;
 			if (StringUtils.isEmptyOrNull(branchName)) {
@@ -483,12 +483,16 @@ public class RepositoryUtil {
 			walk.sort(RevSort.COMMIT_TIME_DESC);
 			RevCommit head = walk.parseCommit(branchObject);
 			walk.markStart(head);
-			commit = walk.next();
+			Iterator<RevCommit> it = walk.iterator();
+			while (it.hasNext()) {
+				RevCommit commit = it.next();
+				allcommit.add(commit.getFullMessage());
+			}
 			walk.dispose();
 		} catch (Throwable t) {
 			throw t;
 		}
-		return commit;
+		return allcommit;
 	}
 
 	public static boolean hasCommits(Repository repository) {

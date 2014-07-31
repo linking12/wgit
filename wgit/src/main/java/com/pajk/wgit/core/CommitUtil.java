@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -135,7 +136,7 @@ public class CommitUtil {
 
 	public static String getBranchName(RevCommit commit, Repository repository)
 			throws IOException {
-		List<String> allBranchs = RepositoryUtil.getAllBranchs(repository);
+		Set<String> allBranchs = RepositoryUtil.getAllBranchs(repository);
 		List<RevCommit> tempCommit = new ArrayList<RevCommit>();
 		tempCommit.add(commit);
 		for (String branch : allBranchs) {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CheckoutResult;
@@ -46,7 +47,7 @@ public class BranchOperation extends BaseOperation {
 	public void execute() throws CoreException {
 		CheckoutCommand co = new Git(repository).checkout();
 		try {
-			List<String> allBranchs = RepositoryUtil.getAllBranchs(repository);
+			Set<String> allBranchs = RepositoryUtil.getAllBranchs(repository);
 			if (allBranchs.contains(target)) {// swtich branch
 				co.setForce(true);
 				co.setCreateBranch(true);

@@ -548,10 +548,10 @@ public class RepositoryUtil {
 		}
 	}
 
-	public static List<String> getAllBranchs(Repository repository) {
+	public static Set<String> getAllBranchs(Repository repository) {
 		List<RefModel> localBranchs = getLocalBranches(repository, false, -1);
 		List<RefModel> remoteBranchs = getRemoteBranches(repository, false, -1);
-		List<String> allBranchs = new ArrayList<String>();
+		Set<String> allBranchs = new HashSet<String>();
 		for (RefModel ref : localBranchs) {
 			allBranchs.add(ref.toString());
 		}

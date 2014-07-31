@@ -19,6 +19,7 @@ import com.pajk.wgit.core.RepositoryUtil;
 import com.pajk.wgit.core.op.BaseOperation;
 import com.pajk.wgit.core.op.BranchOperation;
 import com.pajk.wgit.core.op.CloneOperation;
+import com.pajk.wgit.core.op.CommitOperation;
 import com.pajk.wgit.core.op.CreateLocalBranchOperation;
 import com.pajk.wgit.core.op.FetchOperation;
 import com.pajk.wgit.core.op.IWGitOperation.PreExecuteTask;
@@ -161,6 +162,24 @@ public class RestGitService {
 			result = new Result();
 			String jsonCommit = JacksonJsonUtil.beanToJson(commit, false);
 			result.setMessage(jsonCommit);
+		} catch (Throwable e) {
+			result = new Result();
+			result.setResultCode("001");
+			result.setMessage(e.getMessage());
+		}
+		ModelAndView model = new ModelAndView("jsonView");
+		model.addObject(result);
+		return model;
+	}
+
+	@RequestMapping(value = "/commitall", method = RequestMethod.GET)
+	public ModelAndView commitall(
+			@RequestParam(value = "remoteUrl", required = true) String remoteUrl) {
+		Result result = null;
+		try {
+			CommitOperation commit = new CommitOperation(remoteUrl,
+					"liushiming", "liushiming", "build commit");
+			commit.run();
 		} catch (Throwable e) {
 			result = new Result();
 			result.setResultCode("001");

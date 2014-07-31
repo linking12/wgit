@@ -43,6 +43,14 @@ public class CommitOperation extends BaseOperation {
 		this.message = message;
 	}
 
+	public CommitOperation(String remoteurl, String author, String committer,
+			String message) throws CoreException, IOException {
+		super(remoteurl);
+		this.author = author;
+		this.committer = committer;
+		this.message = message;
+	}
+
 	public void execute() throws CoreException {
 		Git git = new Git(repository);
 		try {

@@ -46,6 +46,8 @@ public class CoreText extends NLS {
 
 	public static String ResetOperation_failed;
 
+	public static String CommitOperation_errorParsingPersonIdent;
+
 	static {
 		initializeMessages(BUNDLE_NAME, CoreText.class);
 	}

@@ -1,5 +1,6 @@
 package com.pajk.wgit.core.op;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,6 +15,7 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+import com.pajk.wgit.core.CoreException;
 import com.pajk.wgit.core.internal.Utils;
 
 public abstract class BaseOperation implements IWGitOperation {
@@ -27,6 +29,15 @@ public abstract class BaseOperation implements IWGitOperation {
 		String projectPath = gitPraentPath
 				+ projectNames.substring(0, projectNames.indexOf(".")) + "/";
 		return projectPath;
+	}
+
+	public static boolean isRepositoryExist(String remoteUrl) {
+		String projectPath = getGirdir(remoteUrl);
+		File tempFile = new File(projectPath);
+		if (tempFile.exists())
+			return tempFile.isDirectory();
+		else
+			return false;
 	}
 
 	public RevCommit getRevCommit(String revision)

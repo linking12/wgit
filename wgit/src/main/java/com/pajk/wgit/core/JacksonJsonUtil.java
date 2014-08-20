@@ -6,10 +6,10 @@ public class JacksonJsonUtil {
 	private static ObjectMapper mapper;
 
 	/**
-	 * »ñÈ¡ObjectMapperÊµÀı
+	 * è·å–ObjectMapperå®ä¾‹
 	 * 
 	 * @param createNew
-	 *            ·½Ê½£ºtrue£¬ĞÂÊµÀı£»false,´æÔÚµÄmapperÊµÀı
+	 *            æ–¹å¼ï¼štrueï¼Œæ–°å®ä¾‹ï¼›false,å­˜åœ¨çš„mapperå®ä¾‹
 	 * @return
 	 */
 	public static synchronized ObjectMapper getMapperInstance(boolean createNew) {
@@ -22,11 +22,11 @@ public class JacksonJsonUtil {
 	}
 
 	/**
-	 * ½«java¶ÔÏó×ª»»³Éjson×Ö·û´®
+	 * å°†javaå¯¹è±¡è½¬æ¢æˆjsonå­—ç¬¦ä¸²
 	 * 
 	 * @param obj
-	 *            ×¼±¸×ª»»µÄ¶ÔÏó
-	 * @return json×Ö·û´®
+	 *            å‡†å¤‡è½¬æ¢çš„å¯¹è±¡
+	 * @return jsonå­—ç¬¦ä¸²
 	 * @throws Exception
 	 */
 	public static String beanToJson(Object obj) throws Exception {
@@ -40,13 +40,13 @@ public class JacksonJsonUtil {
 	}
 
 	/**
-	 * ½«java¶ÔÏó×ª»»³Éjson×Ö·û´®
+	 * å°†javaå¯¹è±¡è½¬æ¢æˆjsonå­—ç¬¦ä¸²
 	 * 
 	 * @param obj
-	 *            ×¼±¸×ª»»µÄ¶ÔÏó
+	 *            å‡†å¤‡è½¬æ¢çš„å¯¹è±¡
 	 * @param createNew
-	 *            ObjectMapperÊµÀı·½Ê½:true£¬ĞÂÊµÀı;false,´æÔÚµÄmapperÊµÀı
-	 * @return json×Ö·û´®
+	 *            ObjectMapperå®ä¾‹æ–¹å¼:trueï¼Œæ–°å®ä¾‹;false,å­˜åœ¨çš„mapperå®ä¾‹
+	 * @return jsonå­—ç¬¦ä¸²
 	 * @throws Exception
 	 */
 	public static String beanToJson(Object obj, Boolean createNew)
@@ -61,12 +61,12 @@ public class JacksonJsonUtil {
 	}
 
 	/**
-	 * ½«json×Ö·û´®×ª»»³Éjava¶ÔÏó
+	 * å°†jsonå­—ç¬¦ä¸²è½¬æ¢æˆjavaå¯¹è±¡
 	 * 
 	 * @param json
-	 *            ×¼±¸×ª»»µÄjson×Ö·û´®
+	 *            å‡†å¤‡è½¬æ¢çš„jsonå­—ç¬¦ä¸²
 	 * @param cls
-	 *            ×¼±¸×ª»»µÄÀà
+	 *            å‡†å¤‡è½¬æ¢çš„ç±»
 	 * @return
 	 * @throws Exception
 	 */
@@ -81,14 +81,14 @@ public class JacksonJsonUtil {
 	}
 
 	/**
-	 * ½«json×Ö·û´®×ª»»³Éjava¶ÔÏó
+	 * å°†jsonå­—ç¬¦ä¸²è½¬æ¢æˆjavaå¯¹è±¡
 	 * 
 	 * @param json
-	 *            ×¼±¸×ª»»µÄjson×Ö·û´®
+	 *            å‡†å¤‡è½¬æ¢çš„jsonå­—ç¬¦ä¸²
 	 * @param cls
-	 *            ×¼±¸×ª»»µÄÀà
+	 *            å‡†å¤‡è½¬æ¢çš„ç±»
 	 * @param createNew
-	 *            ObjectMapperÊµÀı·½Ê½:true£¬ĞÂÊµÀı;false,´æÔÚµÄmapperÊµÀı
+	 *            ObjectMapperå®ä¾‹æ–¹å¼:trueï¼Œæ–°å®ä¾‹;false,å­˜åœ¨çš„mapperå®ä¾‹
 	 * @return
 	 * @throws Exception
 	 */
